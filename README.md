@@ -90,6 +90,8 @@ Specifically for subserosal fibroid type, check the powerbi file for the rest
 
 ## Dashboard Features
 
+<img width="930" height="502" alt="Screenshot 2026-06-02 144149" src="https://github.com/user-attachments/assets/43b96a7b-c3ad-4d5e-a13b-d43cad9659db" />
+
 ### Patient Demographics
 
 * Total patient population
