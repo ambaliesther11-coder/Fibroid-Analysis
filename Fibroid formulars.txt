@@ -1,0 +1,145 @@
+Age Group = 
+SWITCH(
+    TRUE(),
+    'fibroid dataset'[Age] <= 25, "18–25",
+    'fibroid dataset'[Age] <= 35, "26–35",
+    'fibroid dataset'[Age] <= 45, "36–45",
+    "46–55"
+)
+
+
+BMI Category = 
+SWITCH(
+    TRUE(),
+    'fibroid dataset'[BMI] < 18.5, "Underweight",
+    'fibroid dataset'[BMI] < 25, "Normal",
+    'fibroid dataset'[BMI] < 30, "Overweight",
+    "Obese"
+)
+
+
+Fertility Concern = 
+SWITCH(
+    TRUE(),
+    'fibroid dataset'[Severity_Level] = "Severe"
+        && 'fibroid dataset'[Fibroid_Size_cm] > 6,
+        "High Concern",
+
+    'fibroid dataset'[Severity_Level] = "Moderate",
+        "Possible Concern",
+
+    "Low Concern"
+)
+
+
+Fibroid Size Category = 
+SWITCH(
+    TRUE(),
+    'fibroid dataset'[Fibroid_Size_cm] <= 3, "Small",
+    'fibroid dataset'[Fibroid_Size_cm] <= 6, "Medium",
+    "Large"
+)
+
+
+High BMI% (High BMI Patient Percentage)= 
+DIVIDE(
+    CALCULATE(
+        COUNTROWS('fibroid dataset'),
+        'fibroid dataset'[BMI_Category] IN {"Overweight","Obese"}
+    ),
+    COUNTROWS('fibroid dataset'),
+    0
+)
+
+
+MCom.Sz. (Most Common Size) = 
+VAR SizeTable =
+    SUMMARIZE(
+        'fibroid dataset',
+        'fibroid dataset'[Fibroid_Size_Category],
+        "PatientCount", COUNTROWS('fibroid dataset')
+    )
+
+VAR TopSize =
+    TOPN(
+        1,
+        SizeTable,
+        [PatientCount],
+        DESC
+    )
+
+RETURN
+    CONCATENATEX(
+        TopSize,
+        'fibroid dataset'[Fibroid_Size_Category] &
+        " (" &
+        FORMAT([PatientCount], "#,##0") &
+        ")",
+        ", "
+    )
+
+
+Most Affected Group = 
+VAR AgeGroupCounts =
+    SUMMARIZE(
+        'fibroid dataset',
+        'fibroid dataset'[Age_Group],
+        "PatientCount", DISTINCTCOUNT('fibroid dataset'[Patient_ID])
+    )
+VAR TopGroup =
+    TOPN(1, AgeGroupCounts, [PatientCount], DESC)
+RETURN
+MAXX(TopGroup, 'fibroid dataset'[Age_Group])
+
+
+Overall Risk Rate = 
+CALCULATE(
+    DIVIDE(
+        COUNTROWS(
+            FILTER(
+                'fibroid dataset',
+                'fibroid dataset'[Risk_Category] = "High Risk"
+            )
+        ),
+        COUNTROWS('fibroid dataset')
+    ),
+    ALL('fibroid dataset')
+)
+
+
+RE-Risk Rate (Recurrence Risk Rate)= 
+DIVIDE(
+    CALCULATE(
+        COUNTROWS('fibroid dataset'),
+        'fibroid dataset'[Risk_Category] = "High Risk"
+    ),
+    COUNTROWS('fibroid dataset')
+)
+
+
+Risk Category = 
+SWITCH(
+    TRUE(),
+    'fibroid dataset'[Recurrence_Risk_Percent] <= 30, "Low Risk",
+    'fibroid dataset'[Recurrence_Risk_Percent] <= 60, "Medium Risk",
+    "High Risk"
+)
+
+
+Severe Case % = 
+DIVIDE(
+    CALCULATE(
+        COUNTROWS('fibroid dataset'),
+        'fibroid dataset'[Severity_Level] = "Severe"
+    ),
+    COUNTROWS('fibroid dataset')
+)
+
+
+Treatment Success = 
+SWITCH(
+    'fibroid dataset'[Outcome_Status],
+    "Improved", "Successful",
+    "Stable", "Moderate Response",
+    "Worsened", "Poor Response"
+)
